@@ -1,147 +1,165 @@
 <!DOCTYPE html>
-<html lang="vi" class="transition-colors duration-700">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chuyển GPS 70mai A500S sang GPX - Bản Đồ Vệ Tinh Google</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: '#ff6b00',
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Liên kết tệp CSS tùy chỉnh của bạn -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Leaflet CSS & JS (Chỉ tải khi có mạng để hiển thị bản đồ) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 </head>
-<body class="bg-slate-50 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-700">
+<body>
 
-    <header class="py-4 px-6 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-2xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></span>
-                <h1 class="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">70mai GPS to GPX</h1>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-left">
+                <span class="status-dot"></span>
+                <h1>70mai GPS to GPX</h1>
+                <span id="themeBadge" class="theme-badge">Tự động giao diện</span>
             </div>
-            <span id="themeBadge" class="text-[10px] bg-brand/10 text-brand border border-brand/20 px-2.5 py-0.5 rounded-full font-bold">Tự động giao diện</span>
+            
+            <div id="networkIndicator" class="network-indicator">
+                <span id="networkDot" class="network-dot"></span>
+                <span id="networkText">Đang kiểm tra...</span>
+            </div>
         </div>
     </header>
 
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div class="w-full max-w-2xl bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
-            
-            <div class="absolute -top-24 -left-24 w-48 h-48 bg-brand/5 dark:bg-brand/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="text-center space-y-1">
-                <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Bộ Chuyển Đổi GPS 70mai</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Trích xuất hành trình từ Camera 70mai Pro Plus+ (A500S) lên bản đồ vệ tinh Google</p>
+    <main class="app-main">
+        <div class="card">
+            <div class="card-header">
+                <h2>Bộ Chuyển Đổi GPS 70mai</h2>
+                <p>Hỗ trợ Camera hành trình 70mai Pro Plus+ (A500S)</p>
             </div>
 
-            <div id="uploadState" class="block">
-                <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-brand dark:hover:border-brand bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl p-14 text-center cursor-pointer flex flex-col items-center justify-center gap-4 group transition-all">
-                    <input type="file" id="fileInput" class="hidden" accept=".txt">
-                    
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-900 group-hover:bg-brand/10 group-hover:text-brand rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 shadow-inner relative transition-colors duration-300">
-                        <i data-lucide="file-up" class="w-8 h-8"></i>
-                        <span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-brand rounded-full animate-ping opacity-75"></span>
+            <!-- TRẠNG THÁI 1: CHỜ TẢI FILE -->
+            <div id="uploadState" class="state-block">
+                <div id="dropZone" class="drop-zone">
+                    <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                    <div class="upload-icon-container">
+                        <!-- Icon Upload SVG -->
+                        <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        <span class="ping-dot"></span>
                     </div>
-                    
                     <div>
-                        <p class="font-bold text-slate-700 dark:text-slate-200 text-sm group-hover:text-brand dark:group-hover:text-white transition-colors">Kéo thả file .txt của camera hành trình vào đây</p>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-550 mt-1">Hoặc nhấp vào để chọn file. Hệ thống tự động chuyển đổi giữ trọn dữ liệu.</p>
+                        <p class="drop-title">Kéo thả hoặc nhấp để chọn file .txt</p>
+                        <p class="drop-subtitle">Hệ thống tự động chuyển đổi giữ trọn dữ liệu</p>
                     </div>
                 </div>
             </div>
 
-            <div id="processingState" class="hidden py-14 text-center space-y-3">
-                <div class="relative w-12 h-12 mx-auto">
-                    <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
-                    <div class="absolute inset-0 rounded-full border-4 border-brand border-t-transparent animate-spin"></div>
+            <!-- TRẠNG THÁI 2: ĐANG CHUYỂN ĐỔI -->
+            <div id="processingState" class="state-block hidden">
+                <div class="spinner-container">
+                    <div class="spinner-track"></div>
+                    <div class="spinner-active"></div>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wide animate-pulse">Đang nạp dữ liệu và dựng bản đồ vệ tinh Google...</p>
+                <p class="processing-text">Đang nạp dữ liệu và xử lý lộ trình GPS...</p>
             </div>
 
-            <div id="successState" class="hidden space-y-5">
-                
-                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
-                    <div class="bg-emerald-500 text-white p-2 rounded-lg">
-                        <i data-lucide="check" class="w-5 h-5"></i>
+            <!-- TRẠNG THÁI 3: THÀNH CÔNG -->
+            <div id="successState" class="state-block hidden">
+                <div class="success-banner">
+                    <div class="success-icon-container">
+                        <svg class="success-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
                     </div>
-                    <div class="min-w-0 flex-1">
-                        <p id="outputFileName" class="text-xs font-bold text-slate-900 dark:text-white truncate">GPSData_Output.gpx</p>
-                        <p id="outputPointsCount" class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Dữ liệu GPS đã được bóc tách và tự động tải xuống thành công!</p>
+                    <div class="success-info">
+                        <p id="outputFileName" class="output-filename">GPSData_Output.gpx</p>
+                        <p id="outputPointsCount" class="output-points">Dữ liệu đã chuyển đổi thành công!</p>
                     </div>
                 </div>
 
-                <div class="border border-slate-200 dark:border-slate-800 rounded-2xl p-2 bg-slate-50 dark:bg-slate-900/30 flex flex-col relative">
-                    <div class="flex items-center justify-between w-full mb-2 px-2">
-                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                            <i data-lucide="globe" class="w-3.5 h-3.5 text-brand"></i>
+                <!-- KHUNG CHỨA BẢN ĐỒ (Ẩn hoàn toàn nếu offline) -->
+                <div id="mapWrapper" class="map-wrapper">
+                    <div class="map-header">
+                        <span class="map-title">
+                            <svg class="globe-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                            </svg>
                             Bản Đồ Lộ Trình Vệ Tinh Google Maps
                         </span>
-                        <span id="routeGeoArea" class="text-[10px] bg-slate-200 dark:bg-slate-850 text-brand dark:text-amber-500 border border-brand/20 dark:border-amber-500/20 px-2 py-0.5 rounded-full font-bold">Thái Nguyên, VN</span>
+                        <span id="routeGeoArea" class="route-geo-area">Đang xác định...</span>
                     </div>
-                    
-                    <div id="map" class="border border-slate-200 dark:border-slate-800"></div>
+                    <div id="map"></div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3 text-center text-xs">
-                    <div class="bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[9px] text-slate-500 block font-semibold uppercase tracking-wider">Tổng Điểm</span>
-                        <strong id="statPoints" class="text-xs text-slate-800 dark:text-white block mt-0.5">--</strong>
+                <!-- THÔNG BÁO OFFLINE (Thay thế cho khung bản đồ khi mất mạng) -->
+                <div id="offlineMapNotice" class="offline-notice hidden">
+                    <div class="offline-icon-container">
+                        <svg class="offline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-3.536 5 5 0 011.414-3.536m0 0l2.829 2.829M11.243 11.243a.999.999 0 111.414 1.414M3 3l18 18"></path>
+                        </svg>
                     </div>
-                    <div class="bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[9px] text-slate-500 block font-semibold uppercase tracking-wider">Quãng Đường</span>
-                        <strong id="statDistance" class="text-xs text-slate-800 dark:text-white block mt-0.5">--</strong>
-                    </div>
-                    <div class="bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[9px] text-slate-500 block font-semibold uppercase tracking-wider">Cao Độ TB</span>
-                        <strong id="statElevation" class="text-xs text-slate-800 dark:text-white block mt-0.5">--</strong>
+                    <div>
+                        <h4>Bản đồ vệ tinh tạm thời ẩn</h4>
+                        <p>Thiết bị của bạn đang ngoại tuyến. Bản đồ không thể tải từ Google, nhưng file GPX của bạn đã được tạo đầy đủ 100% dữ liệu.</p>
                     </div>
                 </div>
 
-                <div class="space-y-2.5">
-                    <button id="btnDownload" class="w-full bg-brand hover:bg-[#e05e00] text-white font-extrabold py-3.5 px-6 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]">
-                        <i data-lucide="download-cloud" class="w-4.5 h-4.5"></i>
-                        Tải Xuống File .GPX (Nhấn lại nếu cần)
+                <!-- Bảng thống kê thông số -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-title">TỔNG ĐIỂM</span>
+                        <strong id="statPoints">--</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-title">QUÃNG ĐƯỜNG</span>
+                        <strong id="statDistance">--</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-title">CAO ĐỘ TB</span>
+                        <strong id="statElevation">--</strong>
+                    </div>
+                </div>
+
+                <!-- Các nút tải về và đặt lại -->
+                <div class="action-buttons">
+                    <button id="btnDownload" class="btn-download">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Tải Xuống File .GPX
                     </button>
                     
-                    <button id="btnReset" class="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-600 dark:text-slate-400 font-bold py-2.5 px-6 rounded-2xl text-xs border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-1.5">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        Chọn tệp tin khác để chuyển đổi
+                    <button id="btnReset" class="btn-reset">
+                        <svg class="btn-icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.75L18 8"></path>
+                        </svg>
+                        Chọn tệp tin khác
                     </button>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <div id="errorModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[999] hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 w-full max-w-sm p-6 rounded-2xl text-center space-y-4 shadow-2xl">
-            <div class="w-12 h-12 bg-rose-500/10 text-rose-500 mx-auto rounded-full flex items-center justify-center">
-                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+    <!-- HỘP THOẠI BÁO LỖI -->
+    <div id="errorModal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-icon-container">
+                <svg class="modal-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
             </div>
             <div>
-                <h3 class="text-sm font-bold text-slate-950 dark:text-white">Không Thể Đọc Tệp Tin</h3>
-                <p id="errorMessageText" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">Định dạng file không tương thích hoặc bị thiếu dữ liệu.</p>
+                <h3>Không Thể Đọc Tệp Tin</h3>
+                <p id="errorMessageText">Định dạng file không tương thích hoặc bị thiếu dữ liệu.</p>
             </div>
-            <button id="closeErrorBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all">
-                Thử lại
-            </button>
+            <button id="closeErrorBtn" class="btn-modal-close">Thử lại</button>
         </div>
     </div>
 
-    <footer class="py-4 px-4 text-center text-[10px] text-slate-400 bg-white/20 dark:bg-slate-950/40">
-        Thiết bị tương thích: 70mai Pro Plus+ (A500S) • Không upload dữ liệu lên server
+    <footer class="app-footer">
+        Thiết bị tương thích: 70mai Pro Plus+ (A500S) • Không truyền tải dữ liệu ra bên ngoài
     </footer>
 
+    <!-- Liên kết tệp JavaScript của bạn -->
     <script src="script.js"></script>
 </body>
 </html>
