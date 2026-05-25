@@ -1,16 +1,18 @@
-// Khởi động các Icon Lucide
-lucide.createIcons();
+// Khởi chạy các biểu tượng Lucide nếu thư viện có sẵn
+if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+}
 
-// Khai báo các biến toàn cục
-let map;
-let routePolyline;
-let startMarker;
-let endMarker;
+// Khai báo biến toàn cục
+let map = null;
+let routePolyline = null;
+let startMarker = null;
+let endMarker = null;
 
 let compiledGpxData = "";
 let exportFileName = "70mai_Trip.gpx";
 
-// Elements điều phối giao diện
+// DOM Elements
 const uploadState = document.getElementById('uploadState');
 const processingState = document.getElementById('processingState');
 const successState = document.getElementById('successState');
@@ -21,6 +23,8 @@ const fileInput = document.getElementById('fileInput');
 const outputFileName = document.getElementById('outputFileName');
 const outputPointsCount = document.getElementById('outputPointsCount');
 const routeGeoArea = document.getElementById('routeGeoArea');
+const mapWrapper = document.getElementById('mapWrapper');
+const offlineMapNotice = document.getElementById('offlineMapNotice');
 
 const statPoints = document.getElementById('statPoints');
 const statDistance = document.getElementById('statDistance');
@@ -29,23 +33,45 @@ const statElevation = document.getElementById('statElevation');
 const btnDownload = document.getElementById('btnDownload');
 const btnReset = document.getElementById('btnReset');
 
-// Custom Error Modal Elements
 const errorModal = document.getElementById('errorModal');
 const errorMessageText = document.getElementById('errorMessageText');
 const closeErrorBtn = document.getElementById('closeErrorBtn');
 
-// Hiển thị thông báo lỗi tùy biến
+// ĐỒNG BỘ TRẠNG THÁI MẠNG ĐỂ CẬP NHẬT GIAO DIỆN CHUẨN XÁC
+function updateNetworkStatus() {
+    const indicator = document.getElementById('networkIndicator');
+    const dot = document.getElementById('networkDot');
+    const text = document.getElementById('networkText');
+    
+    if (!indicator || !dot || !text) return;
+
+    if (navigator.onLine) {
+        indicator.className = "network-indicator network-online";
+        text.textContent = "Đang trực tuyến";
+    } else {
+        indicator.className = "network-indicator network-offline";
+        text.textContent = "Không có mạng (Ngoại tuyến)";
+    }
+}
+
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
+updateNetworkStatus();
+
+// Hiển thị thông báo lỗi tùy biến (Không dùng alert)
 function showError(message) {
-    errorMessageText.textContent = message;
-    errorModal.classList.remove('hidden');
+    if (errorMessageText) errorMessageText.textContent = message;
+    if (errorModal) errorModal.classList.remove('hidden');
     resetScreenState();
 }
 
-closeErrorBtn.addEventListener('click', () => {
-    errorModal.classList.add('hidden');
-});
+if (closeErrorBtn) {
+    closeErrorBtn.addEventListener('click', () => {
+        if (errorModal) errorModal.classList.add('hidden');
+    });
+}
 
-// Tự động thay đổi giao diện theo thời gian thực tế
+// Tự động thay đổi giao diện theo thời gian thực tế (Ban đêm: 18h tối đến 6h sáng)
 function applyAutomaticTheme() {
     try {
         const currentHour = new Date().getHours();
@@ -66,83 +92,88 @@ function applyAutomaticTheme() {
 }
 
 applyAutomaticTheme();
-setInterval(applyAutomaticTheme, 60000); // Cập nhật sau mỗi phút
+setInterval(applyAutomaticTheme, 60000);
 
-// Sự kiện click chọn file
-dropZone.addEventListener('click', () => fileInput.click());
+// Sự kiện bấm chọn file
+if (dropZone) {
+    dropZone.addEventListener('click', () => {
+        if (fileInput) fileInput.click();
+    });
+}
 
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        importFile(e.target.files[0]);
-    }
-});
+if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            importFile(e.target.files[0]);
+        }
+    });
+}
 
-// Thao tác kéo thả file
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('border-brand', 'bg-brand/5');
-});
+// Các sự kiện hỗ trợ kéo thả tệp
+if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#ff6b00";
+    });
 
-dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('border-brand', 'bg-brand/5');
-});
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = "";
+    });
 
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('border-brand', 'bg-brand/5');
-    if (e.dataTransfer.files.length > 0) {
-        importFile(e.dataTransfer.files[0]);
-    }
-});
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "";
+        if (e.dataTransfer.files.length > 0) {
+            importFile(e.dataTransfer.files[0]);
+        }
+    });
+}
 
 // Đọc tệp tin đầu vào
 function importFile(file) {
-    uploadState.classList.add('hidden');
-    processingState.classList.remove('hidden');
+    if (uploadState) uploadState.classList.add('hidden');
+    if (processingState) processingState.classList.remove('hidden');
 
     const reader = new FileReader();
     reader.onload = function(event) {
         setTimeout(() => {
-            // Cache lại file vào localStorage
-            try {
-                localStorage.setItem('cached_70mai_name', file.name);
-                localStorage.setItem('cached_70mai_content', event.target.result);
-            } catch (err) {
-                console.warn("Không thể lưu cache vì file có dung lượng quá lớn:", err);
-            }
             convert70maiToGpx(event.target.result, file.name);
-        }, 300);
+        }, 200);
     };
     reader.onerror = function() {
-        showError("Không thể đọc tệp tin từ thiết bị của bạn. Hãy thử lại!");
+        showError("Không thể đọc tệp tin từ thiết bị của bạn. Vui lòng kiểm tra lại!");
     };
     reader.readAsText(file);
 }
 
-// Khởi tạo bản đồ vệ tinh Google Maps
+// Khởi tạo bản đồ vệ tinh Google Maps (Chỉ nạp khi TRỰC TUYẾN)
 function initGoogleSatelliteMap(centerLat, centerLon) {
     try {
-        if (!map) {
-            map = L.map('map', {
-                zoomControl: true,
-                scrollWheelZoom: true
-            }).setView([centerLat, centerLon], 15);
+        if (navigator.onLine && typeof L !== 'undefined') {
+            if (!map) {
+                map = L.map('map', {
+                    zoomControl: true,
+                    scrollWheelZoom: true
+                }).setView([centerLat, centerLon], 15);
 
-            // TileLayer Google Satellite Hybrid
-            L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-                subdomains: ['0', '1', '2', '3'],
-                attribution: '&copy; Google Maps'
-            }).addTo(map);
-        } else {
-            map.setView([centerLat, centerLon], 15);
+                // Lớp bản đồ vệ tinh Google Hybrid
+                L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                    maxZoom: 20,
+                    subdomains: ['0', '1', '2', '3'],
+                    attribution: '&copy; Google Maps'
+                }).addTo(map);
+            } else {
+                map.setView([centerLat, centerLon], 15);
+            }
+            return true;
         }
     } catch (err) {
         console.error("Lỗi nạp bản đồ:", err);
     }
+    return false;
 }
 
-// Phân tích định dạng GPS 70mai và chuyển đổi
+// Phân tích định dạng dữ liệu GPS 70mai và chuyển đổi
 function convert70maiToGpx(fileContent, name) {
     try {
         const lines = fileContent.split('\n');
@@ -158,8 +189,9 @@ function convert70maiToGpx(fileContent, name) {
                 const timestampRaw = parts[0].trim();
                 const latVal = parseFloat(parts[2].trim());
                 const lonVal = parseFloat(parts[3].trim());
-                const eleVal = parseFloat(parts[8].trim()); // Cột cao độ (index 8)
+                const eleVal = parseFloat(parts[8].trim());
 
+                // Đảm bảo tọa độ hợp lệ, bảo toàn 100% dữ liệu kể cả sóng yếu V
                 if (!isNaN(latVal) && !isNaN(lonVal) && latVal !== 0 && lonVal !== 0) {
                     let pointTime = null;
                     const unixSeconds = parseInt(timestampRaw);
@@ -189,7 +221,7 @@ function convert70maiToGpx(fileContent, name) {
         });
 
         if (points.length === 0) {
-            showError("Không tìm thấy dữ liệu tọa độ GPS hợp lệ. Vui lòng kiểm tra lại cấu trúc file!");
+            showError("Tệp tin này không chứa dữ liệu tọa độ 70mai hợp lệ. Vui lòng kiểm tra lại!");
             return;
         }
 
@@ -200,9 +232,11 @@ function convert70maiToGpx(fileContent, name) {
             return a.time - b.time;
         });
 
+        // Thiết lập tên file gpx tải về
         const cleanBaseName = name.substring(0, name.lastIndexOf('.')) || name;
         exportFileName = `${cleanBaseName}.gpx`;
 
+        // Tạo XML GPX 1.1 chuẩn quốc tế
         compiledGpxData = generateStandardGpxXml(cleanBaseName, points);
 
         // Tính toán tổng quãng đường di chuyển (Haversine)
@@ -215,42 +249,57 @@ function convert70maiToGpx(fileContent, name) {
         }
         const totalDistanceKm = totalDistanceMeters / 1000;
 
+        // Cập nhật các trường dữ liệu thống kê
         if (statPoints) statPoints.textContent = points.length.toLocaleString();
         if (statDistance) statDistance.textContent = totalDistanceKm.toFixed(2) + " km";
         
         const averageElevation = totalElevationSum / points.length;
         if (statElevation) statElevation.textContent = Math.round(averageElevation) + " m";
 
+        // Đổi giao diện sang thành công
         if (outputFileName) outputFileName.textContent = exportFileName;
-        if (outputPointsCount) outputPointsCount.textContent = `Chuyển đổi thành công ${points.length.toLocaleString()} tọa độ hành trình!`;
+        if (outputPointsCount) outputPointsCount.textContent = `Đã chuyển đổi thành công ${points.length.toLocaleString()} tọa độ hành trình!`;
 
-        processingState.classList.add('hidden');
-        successState.classList.remove('hidden');
+        if (processingState) processingState.classList.add('hidden');
+        if (successState) successState.classList.remove('hidden');
 
-        const midIndex = Math.floor(points.length / 2);
-        initGoogleSatelliteMap(points[midIndex].lat, points[midIndex].lon);
-        renderRouteOnGoogleMap(points);
+        // HIỂN THỊ HOẶC ẨN BẢN ĐỒ TÙY THEO KẾT NỐI MẠNG THỰC TẾ
+        if (navigator.onLine && typeof L !== 'undefined') {
+            if (mapWrapper) mapWrapper.classList.remove('hidden');
+            if (offlineMapNotice) offlineMapNotice.classList.add('hidden');
+            
+            const midIndex = Math.floor(points.length / 2);
+            initGoogleSatelliteMap(points[midIndex].lat, points[midIndex].lon);
+            renderRouteOnGoogleMap(points);
 
-        setTimeout(() => {
-            if (map) {
-                map.invalidateSize();
-            }
-        }, 200);
-
-        // Tự động đoán vùng khu vực
-        const firstPt = points[0];
-        if (firstPt.lat > 21.4 && firstPt.lat < 22.2 && firstPt.lon > 105.5 && firstPt.lon < 106.3) {
-            routeGeoArea.textContent = "Thái Nguyên, Việt Nam";
-        } else if (firstPt.lat > 20 && firstPt.lat < 22.5) {
-            routeGeoArea.textContent = "Khu vực Bắc Bộ";
-        } else if (firstPt.lat > 15 && firstPt.lat <= 20) {
-            routeGeoArea.textContent = "Khu vực Trung Bộ";
-        } else if (firstPt.lat > 8 && firstPt.lat <= 15) {
-            routeGeoArea.textContent = "Khu vực Nam Bộ";
+            setTimeout(() => {
+                if (map) {
+                    map.invalidateSize();
+                }
+            }, 200);
         } else {
-            routeGeoArea.textContent = "Ngoài Lãnh Thổ VN";
+            // NẾU MẤT MẠNG: Ẩn bản đồ an toàn để tránh sập JS
+            if (mapWrapper) mapWrapper.classList.add('hidden');
+            if (offlineMapNotice) offlineMapNotice.classList.remove('hidden');
         }
 
+        // Dự đoán vị trí địa lý sơ bộ
+        const firstPt = points[0];
+        if (routeGeoArea) {
+            if (firstPt.lat > 21.4 && firstPt.lat < 22.2 && firstPt.lon > 105.5 && firstPt.lon < 106.3) {
+                routeGeoArea.textContent = "Thái Nguyên, Việt Nam";
+            } else if (firstPt.lat > 20 && firstPt.lat < 22.5) {
+                routeGeoArea.textContent = "Khu vực Bắc Bộ";
+            } else if (firstPt.lat > 15 && firstPt.lat <= 20) {
+                routeGeoArea.textContent = "Khu vực Trung Bộ";
+            } else if (firstPt.lat > 8 && firstPt.lat <= 15) {
+                routeGeoArea.textContent = "Khu vực Nam Bộ";
+            } else {
+                routeGeoArea.textContent = "Ngoài Lãnh Thổ VN";
+            }
+        }
+
+        // TỰ ĐỘNG TẢI FILE GPX VỀ MÁY NGAY SAU KHI XONG (Kể cả khi ngoại tuyến)
         triggerGpxDownload();
 
     } catch (err) {
@@ -259,9 +308,11 @@ function convert70maiToGpx(fileContent, name) {
     }
 }
 
-// Vẽ đường tuyến lên Google vệ tinh
+// Vẽ đường tuyến màu cam dạ quang lên bản đồ Google vệ tinh
 function renderRouteOnGoogleMap(points) {
     try {
+        if (typeof L === 'undefined' || !map) return;
+
         if (routePolyline) map.removeLayer(routePolyline);
         if (startMarker) map.removeLayer(startMarker);
         if (endMarker) map.removeLayer(endMarker);
@@ -276,14 +327,14 @@ function renderRouteOnGoogleMap(points) {
         }).addTo(map);
 
         const startIcon = L.divIcon({
-            html: '<div class="w-4 h-4 bg-emerald-500 border-2 border-white rounded-full shadow-lg ring-4 ring-emerald-500/35"></div>',
+            html: '<div style="width: 16px; height: 16px; background-color: #10b981; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
             className: 'custom-start-marker',
             iconSize: [16, 16],
             iconAnchor: [8, 8]
         });
 
         const endIcon = L.divIcon({
-            html: '<div class="w-4 h-4 bg-rose-500 border-2 border-white rounded-full shadow-lg ring-4 ring-rose-500/35 animate-pulse"></div>',
+            html: '<div style="width: 16px; height: 16px; background-color: #ef4444; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
             className: 'custom-end-marker',
             iconSize: [16, 16],
             iconAnchor: [8, 8]
@@ -292,11 +343,8 @@ function renderRouteOnGoogleMap(points) {
         const startPoint = pathCoords[0];
         const endPoint = pathCoords[pathCoords.length - 1];
 
-        startMarker = L.marker(startPoint, { icon: startIcon }).addTo(map)
-            .bindPopup('<b class="text-slate-850">Điểm Đi</b>');
-
-        endMarker = L.marker(endPoint, { icon: endIcon }).addTo(map)
-            .bindPopup('<b class="text-slate-850">Điểm Đến</b>');
+        startMarker = L.marker(startPoint, { icon: startIcon }).addTo(map);
+        endMarker = L.marker(endPoint, { icon: endIcon }).addTo(map);
 
         setTimeout(() => {
             if (map && routePolyline) {
@@ -378,32 +426,19 @@ function triggerGpxDownload() {
     }
 }
 
-btnDownload.addEventListener('click', triggerGpxDownload);
-
-// Reset trạng thái
-btnReset.addEventListener('click', () => {
-    localStorage.removeItem('cached_70mai_name');
-    localStorage.removeItem('cached_70mai_content');
-    resetScreenState();
-});
-
-function resetScreenState() {
-    fileInput.value = '';
-    compiledGpxData = "";
-    successState.classList.add('hidden');
-    processingState.classList.add('hidden');
-    uploadState.classList.remove('hidden');
+if (btnDownload) {
+    btnDownload.addEventListener('click', triggerGpxDownload);
 }
 
-// KHÔI PHỤC FILE GẦN NHẤT ĐÃ LƯU TRÊN BỘ NHỚ TRÌNH DUYỆT (Nếu có)
-window.addEventListener('DOMContentLoaded', () => {
-    const cachedName = localStorage.getItem('cached_70mai_name');
-    const cachedContent = localStorage.getItem('cached_70mai_content');
-    if (cachedName && cachedContent) {
-        uploadState.classList.add('hidden');
-        processingState.classList.remove('hidden');
-        setTimeout(() => {
-            convert70maiToGpx(cachedContent, cachedName);
-        }, 300);
-    }
-});
+// Đưa màn hình về trạng thái sẵn sàng ban đầu
+if (btnReset) {
+    btnReset.addEventListener('click', resetScreenState);
+}
+
+function resetScreenState() {
+    if (fileInput) fileInput.value = '';
+    compiledGpxData = "";
+    if (successState) successState.classList.add('hidden');
+    if (processingState) processingState.classList.add('hidden');
+    if (uploadState) uploadState.classList.remove('hidden');
+}
