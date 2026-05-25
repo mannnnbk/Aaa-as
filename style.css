@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=500;600;700;800&display=swap');
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Chuyển động giao diện mượt mà */
+*, *::before, *::after {
+    transition: background-color 0.7s ease, border-color 0.7s ease, color 0.7s ease, box-shadow 0.7s ease;
+}
+
+#map {
+    width: 100%;
+    height: 350px;
+    border-radius: 16px;
+    z-index: 10;
+}
+
+/* Style cho Leaflet khớp giao diện */
+.leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.8) !important;
+    color: #334155 !important;
+    font-size: 9px !important;
+}
+
+.dark .leaflet-control-attribution {
+    background: rgba(11, 15, 25, 0.8) !important;
+    color: #94a3b8 !important;
+}
+
+.leaflet-bar a {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.dark .leaflet-bar a {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+.leaflet-bar a:hover {
+    background-color: #ff6b00 !important;
+    color: white !important;
+}
