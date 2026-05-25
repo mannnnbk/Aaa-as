@@ -1,46 +1,564 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=500;600;700;800&display=swap');
+/* Thiết lập màu sắc hệ thống dựa trên chủ đề sáng/tối */
+:root {
+    --bg-color: #f8fafc;
+    --container-bg: #ffffff;
+    --text-color: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --brand-color: #ff6b00;
+    --brand-hover: #e05e00;
+    --brand-glow: rgba(255, 107, 0, 0.15);
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    --banner-bg: rgba(16, 185, 129, 0.08);
+    --banner-border: rgba(16, 185, 129, 0.2);
+}
+
+.dark {
+    --bg-color: #0b0f19;
+    --container-bg: #0f172a;
+    --text-color: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #1e293b;
+    --brand-color: #ff6b00;
+    --brand-hover: #e05e00;
+    --brand-glow: rgba(255, 107, 0, 0.4);
+    --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    --banner-bg: rgba(16, 185, 129, 0.1);
+    --banner-border: rgba(16, 185, 129, 0.2);
+}
+
+/* Reset cơ bản */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-/* Chuyển động giao diện mượt mà */
-*, *::before, *::after {
-    transition: background-color 0.7s ease, border-color 0.7s ease, color 0.7s ease, box-shadow 0.7s ease;
+.hidden {
+    display: none !important;
 }
 
-#map {
+/* Header */
+.app-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--container-bg);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.header-container {
+    max-width: 42rem;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.status-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background-color: var(--brand-color);
+    animation: pulse 2s infinite;
+}
+
+h1 {
+    font-size: 0.875rem;
+    font-weight: 800;
+}
+
+.theme-badge {
+    font-size: 10px;
+    background-color: rgba(255, 107, 0, 0.1);
+    color: var(--brand-color);
+    border: 1px solid rgba(255, 107, 0, 0.2);
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-weight: 700;
+}
+
+/* Trạng thái mạng */
+.network-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+}
+
+.network-online {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.network-offline {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.network-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+}
+
+.network-online .network-dot {
+    background-color: #10b981;
+    animation: pulse 2s infinite;
+}
+
+.network-offline .network-dot {
+    background-color: #ef4444;
+}
+
+/* Vùng làm việc chính */
+.app-main {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.card {
     width: 100%;
-    height: 350px;
-    border-radius: 16px;
-    z-index: 10;
+    max-width: 42rem;
+    background-color: var(--container-bg);
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Style cho Leaflet khớp giao diện */
-.leaflet-control-attribution {
-    background: rgba(255, 255, 255, 0.8) !important;
-    color: #334155 !important;
-    font-size: 9px !important;
+.card-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
 }
 
-.dark .leaflet-control-attribution {
-    background: rgba(11, 15, 25, 0.8) !important;
-    color: #94a3b8 !important;
+.card-header h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
 }
 
-.leaflet-bar a {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+.card-header p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
-.dark .leaflet-bar a {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border-bottom: 1px solid #334155 !important;
+/* Khung kéo thả */
+.drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 1rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background-color: rgba(255, 255, 255, 0.02);
 }
 
-.leaflet-bar a:hover {
-    background-color: #ff6b00 !important;
-    color: white !important;
+.drop-zone:hover {
+    border-color: var(--brand-color);
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.05);
+}
+
+.upload-icon-container {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    position: relative;
+}
+
+.drop-zone:hover .upload-icon-container {
+    background-color: rgba(255, 107, 0, 0.1);
+    color: var(--brand-color);
+}
+
+.upload-icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.ping-dot {
+    position: absolute;
+    top: -0.125rem;
+    right: -0.125rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--brand-color);
+    animation: pulse 1.5s infinite;
+}
+
+.drop-title {
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.drop-subtitle {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Spinner */
+.spinner-container {
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto;
+}
+
+.spinner-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 4px solid var(--border-color);
+}
+
+.spinner-active {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 4px solid var(--brand-color);
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+.processing-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-align: center;
+    animation: pulse 1.5s infinite;
+}
+
+/* Banner thành công */
+.success-banner {
+    background-color: var(--banner-bg);
+    border: 1px solid var(--banner-border);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.success-icon-container {
+    background-color: #10b981;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.success-info {
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.output-filename {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.output-points {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 0.125rem;
+}
+
+/* Bản đồ */
+.map-wrapper {
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 0 0.5rem 0.5rem;
+}
+
+.map-title {
+    font-weight: 700;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.globe-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--brand-color);
+}
+
+.route-geo-area {
+    font-size: 10px;
+    background-color: var(--border-color);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 700;
+}
+
+/* Thông báo ngoại tuyến */
+.offline-notice {
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    background-color: rgba(245, 158, 11, 0.05);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.offline-icon-container {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.offline-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.offline-notice h4 {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.offline-notice p {
+    font-size: 10px;
+    color: var(--text-muted);
+    max-width: 20rem;
+    line-height: 1.5;
+}
+
+/* Thống kê */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.stat-card {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 0.625rem;
+    text-align: center;
+}
+
+.stat-title {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    display: block;
+}
+
+.stat-card strong {
+    font-size: 12px;
+    margin-top: 0.125rem;
+    display: block;
+}
+
+/* Nút điều hướng */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.btn-download {
+    background-color: var(--brand-color);
+    color: white;
+    font-weight: 800;
+    padding: 0.875rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: var(--brand-glow);
+}
+
+.btn-download:hover {
+    background-color: var(--brand-hover);
+}
+
+.btn-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.btn-reset {
+    background-color: var(--bg-color);
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 0.625rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+}
+
+.btn-reset:hover {
+    color: var(--text-color);
+    background-color: var(--border-color);
+}
+
+.btn-icon-small {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+/* Dialog Lỗi */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(11, 15, 25, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-container {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 24rem;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal-icon-container {
+    width: 3rem;
+    height: 3rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.modal-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.modal-container h3 {
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.modal-container p {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: 0.375rem;
+}
+
+.btn-modal-close {
+    background-color: #ef4444;
+    color: white;
+    font-weight: 700;
+    padding: 0.625rem;
+    border-radius: 0.75rem;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-modal-close:hover {
+    background-color: #dc2626;
+}
+
+/* Footer */
+.app-footer {
+    padding: 1rem;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* Animations */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
 }
